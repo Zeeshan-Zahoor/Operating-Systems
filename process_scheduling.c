@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-int pid[100], at[100], bt[100];
+int pid[100], at[100], bt[100], pr[100], completed[100] = {0};
 int tat[100], ct[100], wt[100];
 
 void fcfs(int n) {
@@ -23,6 +23,11 @@ void fcfs(int n) {
                 temp = bt[j];
                 bt[j] = bt[j + 1];
                 bt[j+1] = temp;
+
+                // to avoid conflict in other algorithms
+                temp = pr[j];
+                pr[j] = pr[j+1];
+                pr[j+1] = temp;
             }
         }
     }
@@ -45,6 +50,7 @@ void fcfs(int n) {
 
     // output
     float avg_wt = 0;
+    printf("FCFS Scheduling: \n");
     printf("PID\tAT\tBT\tCT\tTAT\tWT\n");
     for(int i=0; i<n; i++) {
         printf("P%d\t%d\t%d\t%d\t%d\t%d\n", 
@@ -57,6 +63,62 @@ void fcfs(int n) {
 
     printf("Average waiting time in FCFS: %.2f\n", avg_wt);
 }
+
+void priority(int n) {
+    for(int i = 0; i < n; i++) {
+        completed[i] = 0;
+    }   
+   int current_time = 0;
+   int finished = 0;
+
+   while(finished < n) {
+
+        int selected = -1;
+        int highest_pr = -1;
+
+        //search for highest priority processes
+        for(int i=0; i<n; i++) {
+            if(at[i] <= current_time && completed[i] == 0) {
+                if(pr[i] > highest_pr) {
+                    highest_pr = pr[i];
+                    selected = i;
+                }
+            }
+        }
+
+        //cpu idle case
+        if(selected == -1) {
+            current_time ++;
+            continue;
+        }
+
+        // execute the process completely
+        current_time += bt[selected];
+        ct[selected] = current_time;
+        tat[selected] = ct[selected] - at[selected];
+        wt[selected] = tat[selected] - bt[selected];
+
+        completed[selected] = 1;
+        finished ++;
+   }
+
+   // output
+    float avg_wt = 0;
+    printf("\nPriority Scheduling: \n");
+    printf("PID\tAT\tBT\tPR\tCT\tTAT\tWT\n");
+    for(int i=0; i<n; i++) {
+        printf("P%d\t%d\t%d\t%d\t%d\t%d\t%d\n", 
+            pid[i], at[i], bt[i], pr[i], ct[i], tat[i], wt[i]
+        );
+
+        avg_wt += wt[i];
+    }
+    avg_wt /= n;
+
+    printf("Average waiting time in Priority Scheduling: %.2f\n", avg_wt);
+   
+}
+
 
 int main() {
     int n;
@@ -71,9 +133,13 @@ int main() {
         scanf("%d", &at[i]);
         printf("Burst Time: ");
         scanf("%d", &bt[i]);
+        printf("Priority: ");
+        scanf("%d", &pr[i]);
     }
 
 
     fcfs(n);
+    priority(n);
+
     return 0;
 }
