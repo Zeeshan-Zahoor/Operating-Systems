@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-int pid[100], at[100], bt[100], pr[100], completed[100] = {0};
+int pid[100], at[100], bt[100], pr[100], completed[100] = {0}, rem_bt[100];
 int tat[100], ct[100], wt[100];
 
 void fcfs(int n) {
@@ -119,6 +119,71 @@ void priority(int n) {
    
 }
 
+void srtf(int n) {
+    for(int i = 0; i < n; i++) {
+
+        ct[i] = 0;
+        tat[i] = 0;
+        wt[i] = 0;
+    }
+
+    // copy the burst times
+    for(int i=0; i<n; i++) {
+        rem_bt[i] = bt[i];
+    }
+
+    int finished = 0;
+    int current_time = 0;
+    
+    while(finished < n) {
+        
+        int selected = -1;
+        int min_remaining_bt = 9999;
+
+        for(int i=0; i<n; i++) {
+            if(at[i] <= current_time && rem_bt[i] > 0) {
+                if(min_remaining_bt > rem_bt[i]) {
+                    min_remaining_bt = rem_bt[i];
+                    selected = i;
+                }
+            }
+        }
+
+        // cpu idle case
+        if(selected == -1) {
+            current_time ++;
+            continue;
+        }
+
+        // execute selected process for one unit time
+
+        rem_bt[selected] --;
+        current_time ++;
+
+        // if process finished
+        if(rem_bt[selected] == 0) {
+            // calculate times
+            ct[selected] = current_time;
+            tat[selected] = ct[selected] - at[selected];
+            wt[selected] = tat[selected] - bt[selected];
+            finished ++;
+        }
+
+    }
+
+    // output
+    float avg_wt = 0;
+    printf("\nSRTF Scheduling: \n");
+    printf("PID\tAT\tBT\tCT\tTAT\tWT\n");
+    for(int i=0; i<n; i++) {
+        printf("P%d\t%d\t%d\t%d\t%d\t%d\n", 
+            pid[i], at[i], bt[i], ct[i], tat[i], wt[i]
+        );
+        avg_wt += wt[i];
+    }
+    avg_wt /= n;
+    printf("The Average waiting time with SRTF: %.2f\n", avg_wt);
+}
 
 int main() {
     int n;
@@ -140,6 +205,7 @@ int main() {
 
     fcfs(n);
     priority(n);
+    srtf(n);
 
     return 0;
 }
