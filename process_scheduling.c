@@ -185,6 +185,67 @@ void srtf(int n) {
     printf("The Average waiting time with SRTF: %.2f\n", avg_wt);
 }
 
+void rr(int n) {
+    for(int i = 0; i < n; i++) {
+
+        ct[i] = 0;
+        tat[i] = 0;
+        wt[i] = 0;
+    }
+
+    int quantum = 3;
+    
+    // copy burst time
+    for(int i=0; i<n; i++) {
+        rem_bt[i] = bt[i];
+    }
+
+    int current_time = 0;
+    int finished = 0;
+
+    while(finished < n) {
+        int executed = 0;
+
+        for(int i=0; i<n; i++) {
+            if(at[i] <= current_time && rem_bt[i] > 0) {
+                executed = 1;
+
+                if(rem_bt[i] > quantum) {
+                    rem_bt[i] -= quantum;
+                    current_time += quantum;
+                } else {
+                    // complete the process
+                    current_time += rem_bt[i];
+                    rem_bt[i] = 0;
+                    ct[i] = current_time;
+                    tat[i] = ct[i] - at[i];
+                    wt[i] = tat[i] - bt[i];
+
+                    finished ++;
+                }
+            }
+        }
+
+        // cpu idle case
+        if(executed == 0) {
+            current_time++;
+        }
+    }
+
+    // output
+    float avg_wt = 0;
+    printf("\nRound Robin Scheduling (quantum = 3):\n");
+    printf("PID\tAT\tBT\tCT\tTAT\tWT\n");
+    for(int i=0; i<n; i++) {
+        printf("P%d\t%d\t%d\t%d\t%d\t%d\n", 
+            pid[i], at[i], bt[i], ct[i], tat[i], wt[i]
+        );
+        avg_wt += wt[i];
+    }
+    avg_wt /= n;
+    printf("The Average waiting time with Round Robin: %.2f\n", avg_wt);
+}
+
 int main() {
     int n;
     printf("Enter number of processes: ");
@@ -206,6 +267,7 @@ int main() {
     fcfs(n);
     priority(n);
     srtf(n);
+    rr(n);
 
     return 0;
 }
