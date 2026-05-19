@@ -12,16 +12,18 @@ sem_t readTry;
 int readCount = 0;
 int writeCount = 0;
 
-void* reader(void *arg) {
+void *reader(void *arg)
+{
 
-    int id = *(int*)arg;
+    int id = *(int *)arg;
 
-    //check if reader is allowed
+    // check if reader is allowed
     sem_wait(&readTry);
 
     sem_wait(&mutex);
     readCount++;
-    if(readCount == 1) {
+    if (readCount == 1)
+    {
         sem_wait(&wrt);
     }
 
@@ -29,7 +31,7 @@ void* reader(void *arg) {
 
     sem_post(&readTry);
 
-    // CS 
+    // CS
     printf("Reader %d is Reading..\n", id);
     sleep(2);
 
@@ -37,7 +39,8 @@ void* reader(void *arg) {
 
     sem_wait(&mutex);
     readCount--;
-    if(readCount == 0) {
+    if (readCount == 0)
+    {
         sem_post(&wrt);
     }
 
@@ -46,12 +49,14 @@ void* reader(void *arg) {
     return NULL;
 }
 
-void* writer(void *arg) {
-    int id = *(int*)arg;
+void *writer(void *arg)
+{
+    int id = *(int *)arg;
 
     sem_wait(&mutex2);
-    writeCount ++;
-    if(writeCount == 1) {
+    writeCount++;
+    if (writeCount == 1)
+    {
         sem_wait(&readTry);
     }
     sem_post(&mutex2);
@@ -60,13 +65,14 @@ void* writer(void *arg) {
     // CS
     printf("Writer %d is Writing...\n", id);
     sleep(2);
-    //exit CS
+    // exit CS
 
     sem_post(&wrt);
 
     sem_wait(&mutex2);
     writeCount--;
-    if(writeCount == 0) {
+    if (writeCount == 0)
+    {
         sem_post(&readTry);
     }
     sem_post(&mutex2);
@@ -74,7 +80,8 @@ void* writer(void *arg) {
     return NULL;
 }
 
-int main() {
+int main()
+{
 
     pthread_t r[3], w[2];
     int reader_ids[3] = {1, 2, 3};
@@ -83,31 +90,38 @@ int main() {
     // initialize semaphores
     sem_init(&mutex, 0, 1);
     sem_init(&wrt, 0, 1);
+    sem_init(&mutex2, 0, 1);
+    sem_init(&readTry, 0, 1);
 
-    //create reader threads
-    for(int i=0; i<3; i++) {
+    // create reader threads
+    for (int i = 0; i < 3; i++)
+    {
         pthread_create(&r[i], NULL, reader, &reader_ids[i]);
     }
 
-    //create writer threads
-    for(int i=0; i<2; i++) {
+    // create writer threads
+    for (int i = 0; i < 2; i++)
+    {
         pthread_create(&w[i], NULL, writer, &writer_ids[i]);
     }
 
-    //wait for readers
-    for(int i=0; i<3; i++) {
+    // wait for readers
+    for (int i = 0; i < 3; i++)
+    {
         pthread_join(r[i], NULL);
     }
 
-    //wait for writers
-    for(int i=0; i<2; i++) {
+    // wait for writers
+    for (int i = 0; i < 2; i++)
+    {
         pthread_join(w[i], NULL);
     }
 
-
-    //destroy semaphores
+    // destroy semaphores
     sem_destroy(&mutex);
     sem_destroy(&wrt);
+    sem_destroy(&mutex2);
+    sem_destroy(&readTry);
 
     return 0;
 }
